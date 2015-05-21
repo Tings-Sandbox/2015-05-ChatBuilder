@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>My Chatbuilder</title>
+    <script src="http://chatbuilder.hackreactor.com/ChatBuilder.js"></script>
+  </head>
+  <body>
+
+    <script>
+    
+    delete Chat.display;
+    delete Chat.fetch; 
+    delete Chat.send;
+
+    Chat.guide.start();
+
+    //HELPERS
+
+
+    // CHAT.DISPLAY takes 1 string argument and adds it to the .messages ul as a li. 
+    
+    //TRY1: APPEND OVERWROTE PREVIOUS LISTS 
+    // var display = function(str){
+    //   $('.messages').append('<li>').text(str);
+    // };
+    
+    //APPENDTO ADDS TO THE END OF THE LIST
+    var display = function (str){
+      $('<li>').text(str).appendTo('.messages');
+    }
+
+
+
+    //CHAT.FETCH downloads messages from parse server (how?) using $.get(URL, callback)
+    // and makes it available to you (how?); 
+    //change format: it passes an array of strings as argument to callback. 
+
+    //url is https://api.parse.com
+
+    // var myfetch = function(callback){
+
+    //callback(array);
+    // };
+
+    //WORKING: returns a {results: Array[11]} 
+    // $(function(){
+    //     $.ajax({
+    //         type: 'GET',
+    //         url: 'https://api.parse.com/1/classes/chats?order=createdAt',
+    //         success: function (object) {
+    //             console.log('success!', object);
+    //             // callback(object[results]);                
+    //         }
+    //     })
+    // });
+
+    //
+    function myFetch (callback){
+        $(function(){
+        $.ajax({
+            type: 'GET',
+            url: 'https://api.parse.com/1/classes/chats?order=createdAt', //to account for the order
+            success: function (object) {
+                console.log('success!', object);
+
+                //FAIL: couldn't set my map results as textmsg :( 
+                    // var textmsg = function(){
+                    //     object.map(function(element){
+                    //         return element.text;
+                    //     });
+                    // };
+
+                //FAIL: object.map is not function....
+                    // var textmsg = object.map(function(element){
+                    //         return element.text;
+                    //     });
+
+
+                //SUCCESS! Good thing I know how to write map out with for loops!
+                var textmsg = [];
+                
+                for(var i=0; i<object.results.length; i++){                    
+                        textmsg.push(object.results[i].text);  
+                }
+                
+                console.log(textmsg);
+
+                callback(textmsg);
+            }
+        })
+    })
+    } 
+    ;
+
+    function mySend (string) {
+        $(function(){
+            var obj = {};
+            obj.text = string;
+            var obj2 = JSON.stringify(obj)
+
+            $.ajax({
+                type: 'POST',
+                url: 'https://api.parse.com/1/classes/chats',
+                data: obj2
+            })
+        } )
+    }    
+
+
+    //SCRIPT WITH HELPERS
+    $(document).ready(function() {
+        window.setInterval(function() {
+            myFetch(function(n) {
+                display(n[n.length - 1]), $(".messages").children().length > 10 && $(".messages").children().first().remove();
+                
+            })
+        }, 3e3), $("button").on("click", function() {
+            mySend($(".draft").val()), $(".draft").val("")
+        })
+    });
+        
+
+    </script>
+
+    <h2>My Borken Chat</h2>
+
+    <input class="draft" type="text"/> <button class="send" enabled>Send</button>
+    <ul class = "messages">
+    </ul>
+  </body>
+</html>
